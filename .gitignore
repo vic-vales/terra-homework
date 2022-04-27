@@ -6,3 +6,4 @@ artifacts/
 contracts/*/artifacts
 .DS_Store
 keys.terrain.js
+.idea

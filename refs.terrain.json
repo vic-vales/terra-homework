@@ -13,9 +13,9 @@
       }
     },
     "cw20_token": {
-      "codeId": "66205",
+      "codeId": "67764",
       "contractAddresses": {
-        "default": "terra1hpajld8zs93md8zrs6sfy42zl0khqpmr07muw0"
+        "default": "terra1fpud4qznh6p0r7qg3mcfs3semz48g5228esct2"
       }
     },
     "swap": {
@@ -28,6 +28,14 @@
       "codeId": "66621",
       "contractAddresses": {
         "default": "terra1f7vnhhk24jmaxp2tdgf906yy980yg3c4h8f05h"
+      }
+    }
+  },
+  "localterra": {
+    "cw20_token": {
+      "codeId": "5",
+      "contractAddresses": {
+        "default": "terra1k0jntykt7e4g3y88ltc60czgjuqdy4c9ax8tx2"
       }
     }
   }
