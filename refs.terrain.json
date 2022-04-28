@@ -37,6 +37,12 @@
       "contractAddresses": {
         "default": "terra1k0jntykt7e4g3y88ltc60czgjuqdy4c9ax8tx2"
       }
+    },
+    "oracle": {
+      "codeId": "7",
+      "contractAddresses": {
+        "default": "terra1pcknsatx5ceyfu6zvtmz3yr8auumzrdts4ax4a"
+      }
     }
   }
 }

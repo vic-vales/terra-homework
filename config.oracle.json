@@ -17,8 +17,8 @@
             }
           },
           "instantiateMsg": {
-            "price": 46
-        }
+            "price": "100000"
+          }
         }
       }
     },

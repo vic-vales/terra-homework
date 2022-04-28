@@ -34,6 +34,9 @@ const wallets = {
   gatchaWallet: client.wallet(new MnemonicKey({
     mnemonic: "radar great river eyebrow hat beach lake club melody bench cousin swear remain crack habit tank peanut sort turkey grit envelope segment door desert",
   })),
+  test1Wallet: client.wallet(new MnemonicKey({
+    mnemonic: "notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius",
+  })),
 };
 
 export { client, wallets };
