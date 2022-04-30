@@ -11,8 +11,9 @@ import {
 
 // testnet contract
 const cw20Contract = "terra1fpud4qznh6p0r7qg3mcfs3semz48g5228esct2";
-const wallet = wallets.gatchaWallet;
-const recipientWallet = wallets.myKeyWallet;
+
+const wallet = wallets.myKeyWallet;
+const spenderWallet = wallets.gatchaWallet;
 
 const msg = new MsgExecuteContract(
     // Address of wallet that is signing the transaction
@@ -21,11 +22,14 @@ const msg = new MsgExecuteContract(
     cw20Contract,
     // ExecuteMsg payload
     {
-        transfer: {
+        increase_allowance: {
           // Address of wallet or contract that is getting the tokens
-          recipient: recipientWallet.key.accAddress,
-          // Amount of tokens to transfer, in microunits
-          amount: "20000000",
+          spender: spenderWallet.key.accAddress,
+          // Amount of tokens to increase allowance, in microunits
+          amount: "100000000",
+          expires: {
+              at_time: "1653941444000",
+          },
         },
     },
   );

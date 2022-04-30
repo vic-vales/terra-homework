@@ -21,11 +21,11 @@ const msg = new MsgExecuteContract(
     cw20Contract,
     // ExecuteMsg payload
     {
-        transfer: {
+        burn: {
           // Address of wallet or contract that is getting the tokens
-          recipient: recipientWallet.key.accAddress,
+          // recipient: recipientWallet.key.accAddress,
           // Amount of tokens to transfer, in microunits
-          amount: "20000000",
+          amount: "10000000000",
         },
     },
   );

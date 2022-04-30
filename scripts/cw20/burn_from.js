@@ -12,7 +12,7 @@ import {
 // testnet contract
 const cw20Contract = "terra1fpud4qznh6p0r7qg3mcfs3semz48g5228esct2";
 const wallet = wallets.gatchaWallet;
-const recipientWallet = wallets.myKeyWallet;
+const ownerWallet = wallets.myKeyWallet;
 
 const msg = new MsgExecuteContract(
     // Address of wallet that is signing the transaction
@@ -21,11 +21,11 @@ const msg = new MsgExecuteContract(
     cw20Contract,
     // ExecuteMsg payload
     {
-        transfer: {
-          // Address of wallet or contract that is getting the tokens
-          recipient: recipientWallet.key.accAddress,
-          // Amount of tokens to transfer, in microunits
-          amount: "20000000",
+        burn_from: {
+          // Address of wallet or contract to burn tokens from
+          owner: ownerWallet.key.accAddress,
+          // Amount of tokens to burn, in microunits
+          amount: "460000000",
         },
     },
   );

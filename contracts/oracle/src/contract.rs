@@ -1,7 +1,7 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128, from_binary, to_binary,
+    Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128, to_binary,
 };
 use cw2::set_contract_version;
 
@@ -51,6 +51,11 @@ fn try_update_price(deps: DepsMut, info: MessageInfo, new_price: Uint128) -> Res
         if info.sender != state.owner {
             return Err(ContractError::Unauthorized {});
         }
+
+        if new_price <= Uint128::from(0 as u128) {
+            return Err(ContractError::PriceInstantiationError {});
+        }
+
         state.price = new_price;
         Ok(state)
     })?;
@@ -73,7 +78,7 @@ fn query_price(deps: Deps) -> StdResult<PriceResponse> {
 mod tests {
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-    use cosmwasm_std::{coins};
+    use cosmwasm_std::{coins, from_binary};
 
     #[test]
     fn proper_initialization() {
@@ -113,6 +118,17 @@ mod tests {
         let res = query(deps.as_ref(), mock_env(), QueryMsg::GetPrice {}).unwrap();
         let value: PriceResponse = from_binary(&res).unwrap();
         assert_eq!(new_price.clone(), value.price);
+
+        // price must be positive
+        let new_price = Uint128::from(0 as u128);
+        // owner can update price
+        let info = mock_info("creator", &coins(2, "token"));
+        let msg = ExecuteMsg::UpdatePrice { new_price: new_price.clone()};
+        let res = execute(deps.as_mut(), mock_env(), info, msg);
+        match res {
+            Err(ContractError::PriceInstantiationError {}) => {}
+            _ => panic!("Price must be positive number"),
+        }
 
         // non-owner should not be able to update price
         let unauth_info = mock_info("anyone", &coins(2, "token"));

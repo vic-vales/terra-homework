@@ -5,21 +5,21 @@ const gasPricesJson = await gasPrices.json();
 
 // LCD stands for "Light Client Daemon". I don't really know much about it, but
 // this is how you talk to Terra from JS.
-// const client = new LCDClient({
-//   URL: "https://bombay-lcd.terra.dev/", // Use "https://lcd.terra.dev" for prod "http://localhost:1317" for localterra.
-//   chainID: "bombay-12", // Use "columbus-5" for production or "localterra".
-//   gasPrices: { uluna: gasPricesJson['uluna'] },
-//   gasAdjustment: "1.5", // Increase gas price slightly so transactions go through smoothly.
-//   gas: 10000000,
-// });
-
 const client = new LCDClient({
-  URL: "http://localhost:1317",
-  chainID: "localterra", // Use "columbus-5" for production or "localterra".
+  URL: "https://bombay-lcd.terra.dev/", // Use "https://lcd.terra.dev" for prod "http://localhost:1317" for localterra.
+  chainID: "bombay-12", // Use "columbus-5" for production or "localterra".
   gasPrices: { uluna: gasPricesJson['uluna'] },
   gasAdjustment: "1.5", // Increase gas price slightly so transactions go through smoothly.
   gas: 10000000,
 });
+
+// const client = new LCDClient({
+//   URL: "http://localhost:1317",
+//   chainID: "localterra", // Use "columbus-5" for production or "localterra".
+//   gasPrices: { uluna: gasPricesJson['uluna'] },
+//   gasAdjustment: "1.5", // Increase gas price slightly so transactions go through smoothly.
+//   gas: 10000000,
+// });
 
 
 import { MnemonicKey } from '@terra-money/terra.js';
@@ -33,6 +33,9 @@ const wallets = {
   })),
   gatchaWallet: client.wallet(new MnemonicKey({
     mnemonic: "radar great river eyebrow hat beach lake club melody bench cousin swear remain crack habit tank peanut sort turkey grit envelope segment door desert",
+  })),
+  myKeyWallet: client.wallet(new MnemonicKey({
+    mnemonic: "village skull shell gaze adapt repeat inherit fresh hungry old wall ankle lawn mass leopard seminar carpet access coach above crush worry depart keep",
   })),
   test1Wallet: client.wallet(new MnemonicKey({
     mnemonic: "notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius",
