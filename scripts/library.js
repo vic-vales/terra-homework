@@ -40,6 +40,14 @@ const wallets = {
   test1Wallet: client.wallet(new MnemonicKey({
     mnemonic: "notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius",
   })),
+  // terra1qvlw2d4ln60w7mlw6funy7dk6xax3nzesv0pry
+  swapOwnerWallet: client.wallet(new MnemonicKey({
+    mnemonic: "slide umbrella eagle broken spread world hunt little voyage harvest auction wink wrist large connect lend smooth way clock depend analyst slender need crucial",
+  })),
+  // terra1stmr2pgs8dn3tnuq3j0c8grn0dy70xhgfup6j6
+  bombayWallet: client.wallet(new MnemonicKey({
+    mnemonic: "virus economy check sample rural snack suspect peasant purchase text lucky royal edge animal apology romance earth reflect goat quiz ladder mimic inhale young",
+  })),
 };
 
 export { client, wallets };
