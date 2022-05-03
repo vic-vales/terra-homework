@@ -1,6 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal, Deps, DepsMut, Env, MessageInfo, Response, StdResult, to_binary, Uint128, WasmMsg};
+use cosmwasm_std::{Addr, BankMsg, Binary, Coin, coin, CosmosMsg, Decimal, Deps, DepsMut, DistributionMsg, Env, MessageInfo, Response, StakingMsg, StdResult, to_binary, Uint128, WasmMsg};
 
 use cw2::set_contract_version;
 use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
@@ -54,6 +54,8 @@ pub fn execute(
         ExecuteMsg::Receive(msg) => receive_cw20(deps, env, info, msg),
         ExecuteMsg::Buy {} => try_buy(deps, info),
         ExecuteMsg::WithdrawLuna { amount } => try_withdraw(deps, env, info, amount),
+        ExecuteMsg::WithdrawReward {} => try_withdraw_reward(deps, env, info),
+        ExecuteMsg::StartUndelegation {} => try_start_undelegation(deps, env, info),
     }
 }
 
@@ -110,20 +112,67 @@ pub fn try_buy(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractErr
 
     let state = STATE.load(deps.storage)?;
     Ok(
-        Response::new().add_messages(vec![CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: state.token_address.to_string(),
-            msg: to_binary(&Cw20ExecuteMsg::Transfer {
-                recipient: info.sender.to_string(),
-                amount: gacha_amt_to_transfer,
-            })?,
-            funds: vec![],
-        })])
+        Response::new()
+            .add_messages(
+                vec![
+                    CosmosMsg::Wasm(WasmMsg::Execute {
+                            contract_addr: state.token_address.to_string(),
+                            msg: to_binary(&Cw20ExecuteMsg::Transfer {
+                            recipient: info.sender.to_string(),
+                            amount: gacha_amt_to_transfer,
+                        })?,
+                        funds: vec![],
+                    }),
+                    CosmosMsg::Staking(StakingMsg::Delegate {
+                        validator: "terravaloper19ne0aqltndwxl0n32zyuglp2z8mm3nu0gxpfaw".to_string(),
+                        amount: Coin {
+                            denom: "uluna".to_string(),
+                            amount: coin_amount,
+                        },
+                    })
+                ])
             .add_attribute("method", "try_buy")
             .add_attribute("Luna amount", coin_amount)
             .add_attribute("Gacha price", price)
             .add_attribute("Gacha luna ratio", gacha_luna_ratio.to_string())
             .add_attribute("Gacha amount", gacha_amt_to_transfer)
     )
+}
+
+pub fn try_withdraw_reward(_deps: DepsMut, _env: Env, _info: MessageInfo) -> Result<Response, ContractError> {
+    Ok(
+        Response::new()
+            .add_messages(
+                vec![CosmosMsg::Distribution(DistributionMsg::WithdrawDelegatorReward {
+                        validator: "terravaloper19ne0aqltndwxl0n32zyuglp2z8mm3nu0gxpfaw".to_string(),
+                    })]
+            )
+    )
+}
+
+pub fn try_start_undelegation(deps: DepsMut, env: Env, info: MessageInfo) -> Result<Response, ContractError> {
+    let state = STATE.load(deps.storage)?;
+
+    // only contract owner can undelegate
+    if info.sender != state.owner {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    let mut messages: Vec<CosmosMsg> = vec![];
+
+    let all_delegations = deps.querier
+        .query_all_delegations(env.contract.address.to_string())
+        .expect("There must be at least one delegation");
+
+    for delegation in all_delegations.iter() {
+        let msg: CosmosMsg = CosmosMsg::Staking(StakingMsg::Undelegate {
+            validator: delegation.validator.to_string(),
+            amount: coin(delegation.amount.amount.u128(), "uluna".to_string()),
+        });
+        messages.push(msg);
+    }
+
+    Ok(Response::new().add_messages(messages))
 }
 
 pub fn try_withdraw(deps: DepsMut, env: Env, info: MessageInfo, amount: Decimal) -> Result<Response, ContractError> {

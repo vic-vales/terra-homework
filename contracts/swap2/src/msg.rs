@@ -15,6 +15,8 @@ pub enum ExecuteMsg {
     Receive(Cw20ReceiveMsg),
     Buy {},
     WithdrawLuna { amount: Decimal },
+    WithdrawReward {},
+    StartUndelegation {},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
