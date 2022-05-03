@@ -1,11 +1,11 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{Addr, Binary, CosmosMsg, Decimal, Deps, DepsMut, Env, MessageInfo, Response, StdResult, to_binary, Uint128, WasmMsg};
+use cosmwasm_std::{Addr, BankMsg, Binary, Coin, CosmosMsg, Decimal, Deps, DepsMut, Env, MessageInfo, Response, StdResult, to_binary, Uint128, WasmMsg};
 
 use cw2::set_contract_version;
 use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
 // use terraswap::asset::{Asset, AssetInfo};
-// use terraswap::querier::query_balance;
+use terraswap::querier::query_balance;
 
 use crate::error::ContractError;
 use crate::msg::{BalanceResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
@@ -53,7 +53,7 @@ pub fn execute(
     match msg {
         ExecuteMsg::Receive(msg) => receive_cw20(deps, env, info, msg),
         ExecuteMsg::Buy {} => try_buy(deps, info),
-        ExecuteMsg::Withdraw { amount } => try_withdraw(deps, info, amount),
+        ExecuteMsg::WithdrawLuna { amount } => try_withdraw(deps, env, info, amount),
     }
 }
 
@@ -126,19 +126,62 @@ pub fn try_buy(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractErr
     )
 }
 
-pub fn try_withdraw(_deps: DepsMut, _info: MessageInfo, _amount: i32) -> Result<Response, ContractError> {
-    Ok(Response::default())
+pub fn try_withdraw(deps: DepsMut, env: Env, info: MessageInfo, amount: Decimal) -> Result<Response, ContractError> {
+    let state = STATE.load(deps.storage)?;
+
+    // only contract owner can withdraw luna
+    if info.sender != state.owner {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    let amount_in_uluna = amount * Uint128::from(1e6 as u128);
+
+    if amount_in_uluna <= Uint128::zero() {
+        return Err(ContractError::InvalidWithdrawalAmount{});
+    }
+
+    let balance = query_balance(
+        &deps.querier,
+        env.contract.address.clone(),
+        "uluna".to_string(),
+    )?;
+
+    if amount_in_uluna > balance {
+        return Err(ContractError::NotEnoughBalanceToWithdraw{});
+    }
+
+    Ok(
+        Response::new()
+        .add_messages(vec![CosmosMsg::Bank(BankMsg::Send {
+            to_address: state.owner.to_string(),
+            amount: vec![Coin {
+                denom: "uluna".to_string(),
+                amount: amount_in_uluna,
+            }],
+        })])
+            .add_attribute("method", "withdraw")
+            .add_attribute("beginning_balance", balance.to_string())
+            .add_attribute("amount_withdrawn", amount_in_uluna.to_string())
+            .add_attribute("ending_balance", (balance - amount_in_uluna).to_string())
+    )
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::GetBalance {} => to_binary(&query_balance(deps)?),
+        QueryMsg::GetBalance {} => to_binary(&get_balance(deps, env)?),
     }
 }
 
-fn query_balance(_deps: Deps) -> StdResult<BalanceResponse> {
-    Ok(BalanceResponse { amount: Uint128::from(0u128) })
+fn get_balance(deps: Deps, env: Env) -> StdResult<BalanceResponse> {
+
+    let balance = query_balance(
+        &deps.querier,
+        env.contract.address.clone(),
+        "uluna".to_string(),
+    )?;
+
+    Ok(BalanceResponse { amount: balance })
 }
 
 #[cfg(test)]

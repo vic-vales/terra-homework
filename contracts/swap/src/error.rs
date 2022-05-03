@@ -22,6 +22,12 @@ pub enum ContractError {
     #[error("Invalid amount to transfer")]
     InvalidAmountToTransfer {},
 
+    #[error("Amount must be greater than 0")]
+    InvalidWithdrawalAmount,
+
+    #[error("Not enough balance to withdraw")]
+    NotEnoughBalanceToWithdraw,
+
     #[error("Not implemented")]
     NotImplemented {},
 }
