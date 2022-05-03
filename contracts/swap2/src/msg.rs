@@ -1,8 +1,10 @@
-use cosmwasm_std::{Addr, Uint128};
+use cosmwasm_std::{Addr, Decimal, Uint128};
+use cw20::Cw20ReceiveMsg;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
 pub struct InstantiateMsg {
     pub token_address: Addr,
 }
@@ -10,25 +12,34 @@ pub struct InstantiateMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
-    // Buy
+    Receive(Cw20ReceiveMsg),
     Buy {},
-
-    // Withdraw
-    Withdraw { amount: u64 }, // Step 1: claim rewards from validators
-    WithdrawStep2ConvertRewardsToLuna { amount: u64 },
-    WithdrawStep3SendLuna { amount: u64 },
-
-    // StartUndelegation
-    StartUndelegation { amount: Uint128 },
+    WithdrawLuna { amount: Decimal },
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct MigrateMsg {}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
-    QueryTokenAddress {},
+    // Returns luna balance
+    GetBalance {},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct QueryTokenAddressResponse {
-    pub token_address: Addr,
+pub struct BalanceResponse {
+    pub amount: Uint128,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum PriceOracleQueryMsg {
+    // Returns the most recently stored price.
+    GetPrice {},
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct PriceOracleResponse {
+    pub price: Uint128,
 }

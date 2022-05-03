@@ -696,6 +696,7 @@ dependencies = [
  "serde",
  "shared",
  "terra-cosmwasm",
+ "terraswap",
  "thiserror",
 ]
 

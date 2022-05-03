@@ -16,8 +16,17 @@ pub enum ContractError {
     #[error("Buy Error")]
     BuyError {},
 
-    #[error("Unknown Error")]
-    UnknownError {},
+    #[error("Invalid price coming from Oracle")]
+    InvalidOraclePriceError {},
+
+    #[error("Invalid amount to transfer")]
+    InvalidAmountToTransfer {},
+
+    #[error("Amount must be greater than 0")]
+    InvalidWithdrawalAmount,
+
+    #[error("Not enough balance to withdraw")]
+    NotEnoughBalanceToWithdraw,
 
     #[error("Not implemented")]
     NotImplemented {},
