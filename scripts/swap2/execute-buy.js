@@ -7,8 +7,9 @@ import {
 
 // const contract = "terra1f7vnhhk24jmaxp2tdgf906yy980yg3c4h8f05h";
 // testnet
-// swap contract address of the Gacha token
-const contract = "terra1v85ctl8fg8097xx93musqgl0wg99lx6kwk8fhq";
+// swap contract address
+// const contract = "terra1v85ctl8fg8097xx93musqgl0wg99lx6kwk8fhq";
+const contract = "terra1dck97x9rae2cvsavracpr90u3ewlv9ux4ag36n";
 const wallet = wallets.bombayWallet;
 
 const amount = (0.1 * 1e6).toFixed(0);

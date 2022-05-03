@@ -13,6 +13,15 @@ pub enum ContractError {
     #[error("quantity is invalid")]
     InvalidQuantity,
 
+    #[error("Buy Error")]
+    BuyError {},
+
+    #[error("Invalid price coming from Oracle")]
+    InvalidOraclePriceError {},
+
+    #[error("Invalid amount to transfer")]
+    InvalidAmountToTransfer {},
+
     #[error("Not implemented")]
     NotImplemented {},
 }

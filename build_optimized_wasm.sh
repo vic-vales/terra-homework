@@ -17,8 +17,14 @@ docker run --rm -v "$(pwd)":/code \
 # Copy artifacts to where `terrain deploy` expects them. This is a bit hacky,
 # but unfortunately `terrain deploy` doesn't play nicely with repos that have
 # more than one contract.
-cp -r artifacts contracts/counter
-cp -r artifacts contracts/cw20_token
-cp -r artifacts contracts/oracle
-cp -r artifacts contracts/swap
-cp -r artifacts contracts/swap2
+#cp -r artifacts contracts/counter
+#cp -r artifacts contracts/cw20_token
+#cp -r artifacts contracts/oracle
+#cp -r artifacts contracts/swap
+#cp -r artifacts contracts/swap2
+
+cp -r artifacts/counter-aarch64.wasm contracts/counter/artifacts/counter.wasm
+cp -r artifacts/cw20_token-aarch64.wasm contracts/cw20_token/artifacts/cw20_token.wasm
+cp -r artifacts/oracle-aarch64.wasm contracts/oracle/artifacts/oracle.wasm
+cp -r artifacts/swap-aarch64.wasm contracts/swap/artifacts/swap.wasm
+cp -r artifacts/swap2-aarch64.wasm contracts/swap2/artifacts/swap2.wasm
