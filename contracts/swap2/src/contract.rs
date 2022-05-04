@@ -3,7 +3,8 @@ use cosmwasm_std::entry_point;
 use cosmwasm_std::{Addr, BankMsg, Binary, Coin, coin, CosmosMsg, Decimal, Deps, DepsMut, DistributionMsg, Env, MessageInfo, Response, StakingMsg, StdResult, to_binary, Uint128, WasmMsg};
 
 use cw2::set_contract_version;
-use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
+use cw20::{Cw20ExecuteMsg};
+use terra_cosmwasm::TerraMsgWrapper;
 // use terraswap::asset::{Asset, AssetInfo};
 use terraswap::querier::query_balance;
 
@@ -11,6 +12,7 @@ use crate::error::ContractError;
 use crate::msg::{BalanceResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state::{State, STATE};
 use crate::price::{try_get_price_from_oracle};
+use crate::swaps::{swap_native_tokens_to_uluna};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:swap";
@@ -49,9 +51,8 @@ pub fn execute(
     env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
-) -> Result<Response, ContractError> {
+) -> Result<Response<TerraMsgWrapper>, ContractError> {
     match msg {
-        ExecuteMsg::Receive(msg) => receive_cw20(deps, env, info, msg),
         ExecuteMsg::Buy {} => try_buy(deps, info),
         ExecuteMsg::WithdrawLuna { amount } => try_withdraw(deps, env, info, amount),
         ExecuteMsg::WithdrawReward {} => try_withdraw_reward(deps, env, info),
@@ -59,29 +60,7 @@ pub fn execute(
     }
 }
 
-pub fn receive_cw20(
-    _deps: DepsMut,
-    _env: Env,
-    _info: MessageInfo,
-    _cw20_msg: Cw20ReceiveMsg,
-) -> Result<Response, ContractError> {
-    // let passed_asset: Asset = Asset {
-    //     info: AssetInfo::Token {
-    //         contract_addr: info.sender.to_string(),
-    //     },
-    //     amount: cw20_msg.amount,
-    // };
-    //
-    // match from_binary(&cw20_msg.msg) {
-    //     Ok(Cw20HookMsg::Decrement {}) => {
-    //         decrement(deps, passed_asset)
-    //     }
-    //     Err(_) => Err(ContractError::InvalidCW20Hook {}),
-    // }
-    Ok(Response::default())
-}
-
-pub fn try_buy(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractError> {
+pub fn try_buy(deps: DepsMut, info: MessageInfo) -> Result<Response<TerraMsgWrapper>, ContractError> {
     // Extract coin amount
     let coin_amount: Uint128 = info
         .funds
@@ -139,18 +118,17 @@ pub fn try_buy(deps: DepsMut, info: MessageInfo) -> Result<Response, ContractErr
     )
 }
 
-pub fn try_withdraw_reward(_deps: DepsMut, _env: Env, _info: MessageInfo) -> Result<Response, ContractError> {
+pub fn try_withdraw_reward(deps: DepsMut, env: Env, info: MessageInfo) -> Result<Response<TerraMsgWrapper>, ContractError> {
     Ok(
         Response::new()
-            .add_messages(
-                vec![CosmosMsg::Distribution(DistributionMsg::WithdrawDelegatorReward {
-                        validator: "terravaloper19ne0aqltndwxl0n32zyuglp2z8mm3nu0gxpfaw".to_string(),
-                    })]
-            )
+            .add_messages(vec![CosmosMsg::Distribution(DistributionMsg::WithdrawDelegatorReward {
+                validator: "terravaloper19ne0aqltndwxl0n32zyuglp2z8mm3nu0gxpfaw".to_string(),
+            })])
+            .add_submessages(swap_native_tokens_to_uluna(deps, env, info)?.messages)
     )
 }
 
-pub fn try_start_undelegation(deps: DepsMut, env: Env, info: MessageInfo) -> Result<Response, ContractError> {
+pub fn try_start_undelegation(deps: DepsMut, env: Env, info: MessageInfo) -> Result<Response<TerraMsgWrapper>, ContractError> {
     let state = STATE.load(deps.storage)?;
 
     // only contract owner can undelegate
@@ -158,14 +136,14 @@ pub fn try_start_undelegation(deps: DepsMut, env: Env, info: MessageInfo) -> Res
         return Err(ContractError::Unauthorized {});
     }
 
-    let mut messages: Vec<CosmosMsg> = vec![];
+    let mut messages = vec![];
 
     let all_delegations = deps.querier
         .query_all_delegations(env.contract.address.to_string())
         .expect("There must be at least one delegation");
 
     for delegation in all_delegations.iter() {
-        let msg: CosmosMsg = CosmosMsg::Staking(StakingMsg::Undelegate {
+        let msg = CosmosMsg::Staking(StakingMsg::Undelegate {
             validator: delegation.validator.to_string(),
             amount: coin(delegation.amount.amount.u128(), "uluna".to_string()),
         });
@@ -175,7 +153,7 @@ pub fn try_start_undelegation(deps: DepsMut, env: Env, info: MessageInfo) -> Res
     Ok(Response::new().add_messages(messages))
 }
 
-pub fn try_withdraw(deps: DepsMut, env: Env, info: MessageInfo, amount: Decimal) -> Result<Response, ContractError> {
+pub fn try_withdraw(deps: DepsMut, env: Env, info: MessageInfo, amount: Decimal) -> Result<Response<TerraMsgWrapper>, ContractError> {
     let state = STATE.load(deps.storage)?;
 
     // only contract owner can withdraw luna
